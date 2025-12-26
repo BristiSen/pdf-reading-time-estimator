@@ -1,15 +1,43 @@
+let pdfPages = 0;
+
+document.getElementById("pdfFile").addEventListener("change", function (event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const fileReader = new FileReader();
+
+  fileReader.onload = function () {
+    const typedarray = new Uint8Array(this.result);
+
+    pdfjsLib.getDocument(typedarray).promise.then(pdf => {
+      pdfPages = pdf.numPages;
+      document.getElementById("result").innerText =
+        `📄 PDF loaded with ${pdfPages} pages`;
+    });
+  };
+
+  fileReader.readAsArrayBuffer(file);
+});
+
 function calculateTime() {
-  const pages = Number(document.getElementById("pages").value);
+  // 🔐 SAFETY CHECK: PDF must be uploaded first
+  if (pdfPages === 0) {
+    document.getElementById("result").innerText =
+      "Please upload a PDF first 📄";
+    return;
+  }
+
   const speed = Number(document.getElementById("speed").value);
   const hoursPerDay = Number(document.getElementById("hoursPerDay").value);
 
-  if (!pages || !speed || !hoursPerDay) {
+  // 🔐 SAFETY CHECK: Other inputs
+  if (!speed || !hoursPerDay) {
     document.getElementById("result").innerText =
       "Please fill all fields 🌸";
     return;
   }
 
-  const totalHours = pages / speed;
+  const totalHours = pdfPages / speed;
   const days = Math.ceil(totalHours / hoursPerDay);
 
   document.getElementById("result").innerText =
